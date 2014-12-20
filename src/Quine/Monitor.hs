@@ -112,14 +112,14 @@ newtype Gauge = Gauge { runGauge :: Maybe G.Gauge }
 newtype Label = Label { runLabel :: Maybe L.Label }
 newtype Counter = Counter { runCounter :: Maybe C.Counter }
 
-instance HasSetter Label String where
+instance MonadIO m => HasSetter Label String m where
   Label t $= a = liftIO $ maybe (return ()) (L.set ?? pack a) t
 
-instance HasUpdate Label String where
+instance MonadIO m => HasUpdate Label String m where
   Label t $~ f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
   Label t $~! f = liftIO $ maybe (return ()) (L.modify (pack . f . unpack)) t
 
-instance HasSetter Gauge Int64 where
+instance MonadIO m => HasSetter Gauge Int64 m where
   Gauge t $= a = liftIO $ maybe (return ()) (G.set ?? a) t
 
 instance Gauged Gauge Int64 where

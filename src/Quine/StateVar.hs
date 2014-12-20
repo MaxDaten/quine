@@ -36,21 +36,21 @@ import Foreign.Storable
 
 infixr 2 $=, $=!, $~, $~!
 
-class HasSetter t a | t -> a where
-  ($=) :: MonadIO m => t -> a -> m ()
+class HasSetter t a m | t m -> a where
+  ($=) :: t -> a -> m ()
 
-instance Storable a => HasSetter (Ptr a) a where
+instance (MonadIO m, Storable a) => HasSetter (Ptr a) a m where
   p $= a = liftIO $ poke p a
   {-# INLINE ($=) #-}
 
-instance HasSetter (IORef a) a where
+instance MonadIO m => HasSetter (IORef a) a m where
   p $= a = liftIO $ writeIORef p a
   {-# INLINE ($=) #-}
 
-instance HasSetter (TVar a) a where
+instance MonadIO m => HasSetter (TVar a) a m where
   p $= a = liftIO $ atomically $ writeTVar p a
 
-($=!) :: (HasSetter t a, MonadIO m) => t -> a -> m ()
+($=!) :: (HasSetter t a m, Monad m) => t -> a -> m ()
 p $=! a = (p $=) $! a
 {-# INLINE ($=!) #-}
 
@@ -71,53 +71,53 @@ instance Decidable SettableStateVar where
     Left b -> l b
     Right c -> r c
 
-instance HasSetter (SettableStateVar a) a where
+instance MonadIO m => HasSetter (SettableStateVar a) a m where
   SettableStateVar f $= a = liftIO (f a)
   {-# INLINE ($=) #-}
 
 type GettableStateVar = IO
 
-class HasGetter t a | t -> a where
-  get :: MonadIO m => t -> m a
+class HasGetter t m a | t m -> a where
+  get :: t -> m a
 
-instance HasGetter (TVar a) a where
+instance MonadIO m => HasGetter (TVar a) m a where
   get = liftIO . atomically . readTVar
 
-instance HasGetter (IO a) a where
+instance MonadIO m => HasGetter (IO a) m a where
   get = liftIO
 
-instance Storable a => HasGetter (Ptr a) a where
+instance (Storable a, MonadIO m) => HasGetter (Ptr a) m a where
   get = liftIO . peek
 
-instance HasGetter (IORef a) a where
+instance MonadIO m => HasGetter (IORef a) m a where
   get = liftIO . readIORef
 
 data StateVar a = StateVar (IO a) (a -> IO ()) deriving Typeable
 
-instance HasGetter (StateVar a) a where
+instance MonadIO m => HasGetter (StateVar a) m a where
   get (StateVar g _) = liftIO g
 
-instance HasSetter (StateVar a) a where
+instance MonadIO m => HasSetter (StateVar a) a m where
   StateVar _ s $= a = liftIO $ s a
 
 mapStateVar :: (b -> a) -> (a -> b) -> StateVar a -> StateVar b
 mapStateVar ba ab (StateVar ga sa) = StateVar (ab <$> ga) (sa . ba)
 {-# INLINE mapStateVar #-}
 
-class HasUpdate t a | t -> a where
-  ($~) :: MonadIO m => t -> (a -> a) -> m ()
-  default ($~) :: (MonadIO m, HasGetter t a, HasSetter t a) => t -> (a -> a) -> m ()
-  r $~ f = liftIO $ do
+class Monad m => HasUpdate t a m | t m -> a where
+  ($~) :: t -> (a -> a) -> m ()
+  default ($~) :: (HasGetter t m a, HasSetter t a m) => t -> (a -> a) -> m ()
+  r $~ f = do
     a <- get r
     r $= f a
-  ($~!) :: MonadIO m => t -> (a -> a) -> m ()
-  default ($~!) :: (MonadIO m, HasGetter t a, HasSetter t a) => t -> (a -> a) -> m ()
-  r $~! f = liftIO $ do
+  ($~!) :: t -> (a -> a) -> m ()
+  default ($~!) :: (HasGetter t m a, HasSetter t a m) => t -> (a -> a) -> m ()
+  r $~! f = do
     a <- get r
     r $=! f a
 
-instance HasUpdate (StateVar a) a
-instance Storable a => HasUpdate (Ptr a) a
-instance HasUpdate (IORef a) a where
+instance MonadIO m => HasUpdate (StateVar a) a m
+instance (Storable a, MonadIO m) => HasUpdate (Ptr a) a m
+instance MonadIO m => HasUpdate (IORef a) a m where
   r $~ f  = liftIO $ atomicModifyIORef r $ \a -> (f a,())
   r $~! f = liftIO $ atomicModifyIORef' r $ \a -> (f a,())
