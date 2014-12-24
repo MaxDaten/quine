@@ -24,6 +24,7 @@ module Quine.GL.Uniform
   , uniformMat4
   -- * Program Uniforms
   -- $programUniform
+  , programUniform
   , programUniform1f
   , programUniform2f
   , programUniform3f
@@ -64,6 +65,7 @@ module Quine.GL.Uniform
 
 import Control.Applicative
 import Control.Monad.IO.Class
+import Control.Monad (liftM)
 import Control.Lens (view)
 import GHC.TypeLits
 import Data.Coerce
@@ -124,6 +126,9 @@ uniformMat4 l = uniformMat4s l . Id
 -- The benefit of this API is that it doesn't tie to the current bound program.
 -- and so we have fewer state changes, and nicely these can make a full
 -- 'StateVar'.
+
+programUniform :: MonadIO m => (Program -> UniformLocation -> StateVar a) -> Program -> String -> m (StateVar a)
+programUniform f p s = f p `liftM` uniformLocation p s
 
 programUniformv' :: forall (n :: Nat) f a. (Dim n, Storable (f a)) => (GLuint -> GLint -> Ptr a -> IO ()) -> (GLuint -> GLint -> GLsizei -> Ptr a -> IO ()) -> Program -> UniformLocation -> StateVar (V n (f a))
 programUniformv' getv setv p l = StateVar g s where
