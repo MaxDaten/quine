@@ -5,6 +5,7 @@
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE DataKinds           #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) 2014 Edward Kmett
@@ -64,6 +65,7 @@ module Quine.GL.Uniform
 import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Lens (view)
+import GHC.TypeLits
 import Data.Coerce
 import Data.Distributive
 import Data.Foldable
@@ -123,7 +125,7 @@ uniformMat4 l = uniformMat4s l . Id
 -- and so we have fewer state changes, and nicely these can make a full
 -- 'StateVar'.
 
-programUniformv' :: (Dim n, Storable (f a)) => (GLuint -> GLint -> Ptr a -> IO ()) -> (GLuint -> GLint -> GLsizei -> Ptr a -> IO ()) -> Program -> UniformLocation -> StateVar (V n (f a))
+programUniformv' :: forall (n :: Nat) f a. (Dim n, Storable (f a)) => (GLuint -> GLint -> Ptr a -> IO ()) -> (GLuint -> GLint -> GLsizei -> Ptr a -> IO ()) -> Program -> UniformLocation -> StateVar (V n (f a))
 programUniformv' getv setv p l = StateVar g s where
   g = alloca $ (>>) <$> getv (coerce p) (coerce l) . castPtr <*> peek
   s v = alloca $ (>>) <$> setv (coerce p) (coerce l) (fromIntegral $ dim v) . castPtr <*> (`poke` v)
@@ -148,16 +150,16 @@ programUniform4f p l = StateVar g s where
   g = alloca $ (>>) <$> glGetUniformfv (coerce p) (coerce l) . castPtr <*> peek
   s (V4 a b c d) = glProgramUniform4f (coerce p) (coerce l) a b c d
 
-programUniform1fv :: Dim n => Program -> UniformLocation -> StateVar (V n Float)
+programUniform1fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Float)
 programUniform1fv p l = mapStateVar (fmap V1) (fmap (view _x)) $ programUniformv' glGetUniformfv glProgramUniform1fv p l
 
-programUniform2fv :: Dim n => Program -> UniformLocation -> StateVar (V n (V2 Float))
+programUniform2fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V2 Float))
 programUniform2fv = programUniformv' glGetUniformfv glProgramUniform2fv
 
-programUniform3fv :: Dim n => Program -> UniformLocation -> StateVar (V n (V3 Float))
+programUniform3fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V3 Float))
 programUniform3fv = programUniformv' glGetUniformfv glProgramUniform3fv
 
-programUniform4fv :: Dim n => Program -> UniformLocation -> StateVar (V n (V4 Float))
+programUniform4fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V4 Float))
 programUniform4fv = programUniformv' glGetUniformfv glProgramUniform4fv
 
 programUniform1d :: Program -> UniformLocation -> StateVar Double
@@ -180,16 +182,16 @@ programUniform4d p l = StateVar g s where
   g = alloca $ (>>) <$> glGetUniformdv (coerce p) (coerce l) . castPtr <*> peek
   s (V4 a b c d) = glProgramUniform4d (coerce p) (coerce l) a b c d
 
-programUniform1dv :: Dim n => Program -> UniformLocation -> StateVar (V n Double)
+programUniform1dv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Double)
 programUniform1dv p l = mapStateVar (fmap V1) (fmap (view _x)) $ programUniformv' glGetUniformdv glProgramUniform1dv p l
 
-programUniform2dv :: Dim n => Program -> UniformLocation -> StateVar (V n (V2 Double))
+programUniform2dv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V2 Double))
 programUniform2dv = programUniformv' glGetUniformdv glProgramUniform2dv
 
-programUniform3dv :: Dim n => Program -> UniformLocation -> StateVar (V n (V3 Double))
+programUniform3dv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V3 Double))
 programUniform3dv = programUniformv' glGetUniformdv glProgramUniform3dv
 
-programUniform4dv :: Dim n => Program -> UniformLocation -> StateVar (V n (V4 Double))
+programUniform4dv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V4 Double))
 programUniform4dv = programUniformv' glGetUniformdv glProgramUniform4dv
 
 programUniform1i :: Program -> UniformLocation -> StateVar Int32
@@ -212,16 +214,16 @@ programUniform4i p l = StateVar g s where
   g = alloca $ (>>) <$> glGetUniformiv (coerce p) (coerce l) . castPtr <*> peek
   s (V4 a b c d) = glProgramUniform4i (coerce p) (coerce l) a b c d
 
-programUniform1iv :: Dim n => Program -> UniformLocation -> StateVar (V n Int32)
+programUniform1iv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Int32)
 programUniform1iv p l = mapStateVar (fmap V1) (fmap (view _x)) $ programUniformv' glGetUniformiv glProgramUniform1iv p l
 
-programUniform2iv :: Dim n => Program -> UniformLocation -> StateVar (V n (V2 Int32))
+programUniform2iv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V2 Int32))
 programUniform2iv = programUniformv' glGetUniformiv glProgramUniform2iv
 
-programUniform3iv :: Dim n => Program -> UniformLocation -> StateVar (V n (V3 Int32))
+programUniform3iv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V3 Int32))
 programUniform3iv = programUniformv' glGetUniformiv glProgramUniform3iv
 
-programUniform4iv :: Dim n => Program -> UniformLocation -> StateVar (V n (V4 Int32))
+programUniform4iv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V4 Int32))
 programUniform4iv = programUniformv' glGetUniformiv glProgramUniform4iv
 
 programUniform1ui :: Program -> UniformLocation -> StateVar Word32
@@ -244,16 +246,16 @@ programUniform4ui p l = StateVar g s where
   g = alloca $ (>>) <$> glGetUniformuiv (coerce p) (coerce l) . castPtr <*> peek
   s (V4 a b c d) = glProgramUniform4ui (coerce p) (coerce l) a b c d
 
-programUniform1uiv :: forall n. Dim n => Program -> UniformLocation -> StateVar (V n Word32)
+programUniform1uiv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Word32)
 programUniform1uiv p l = mapStateVar (fmap V1) (fmap (view _x)) $ programUniformv' glGetUniformuiv glProgramUniform1uiv p l
 
-programUniform2uiv :: forall n. Dim n => Program -> UniformLocation -> StateVar (V n (V2 Word32))
+programUniform2uiv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V2 Word32))
 programUniform2uiv = programUniformv' glGetUniformuiv glProgramUniform2uiv
 
-programUniform3uiv :: forall n. Dim n => Program -> UniformLocation -> StateVar (V n (V3 Word32))
+programUniform3uiv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V3 Word32))
 programUniform3uiv = programUniformv' glGetUniformuiv glProgramUniform3uiv
 
-programUniform4uiv :: forall n. Dim n => Program -> UniformLocation -> StateVar (V n (V4 Word32))
+programUniform4uiv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V4 Word32))
 programUniform4uiv = programUniformv' glGetUniformuiv glProgramUniform4uiv
 
 --------------------------------------------------------------------------------
