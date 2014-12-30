@@ -96,7 +96,7 @@ instance FramebufferAttachment Texture where
   attach target slot tex = framebufferTexture target slot tex 0
 
 instance FramebufferAttachment (Renderbuffer a) where
-  attach = framebufferRenderbuffer
+  attach target slot = framebufferRenderbuffer target slot GL_RENDERBUFFER
 
 -- * Binding
 
@@ -118,8 +118,8 @@ framebufferTexture (FramebufferTarget t _) slot tex = liftIO . glFramebufferText
 framebufferTextureLayer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Texture -> MipmapLevel -> TextureLayer -> m ()
 framebufferTextureLayer (FramebufferTarget t _) slot tex level = liftIO . glFramebufferTextureLayer t slot (object tex) level
 
-framebufferRenderbuffer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> Renderbuffer a -> m () 
-framebufferRenderbuffer (FramebufferTarget t _) slot = liftIO . glFramebufferRenderbuffer t slot GL_RENDERBUFFER . object
+framebufferRenderbuffer :: MonadIO m => FramebufferTarget -> FramebufferAttachmentPoint -> GLenum -> Renderbuffer a -> m () 
+framebufferRenderbuffer (FramebufferTarget t _) slot buffTarget = liftIO . glFramebufferRenderbuffer t slot buffTarget . object
 
 checkFramebufferStatus :: MonadIO m => FramebufferTarget -> m (Maybe FramebufferError)
 checkFramebufferStatus (FramebufferTarget t _) = do
