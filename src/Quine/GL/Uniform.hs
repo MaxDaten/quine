@@ -86,6 +86,7 @@ import Quine.GL.Program
 import Quine.GL.Types
 import Quine.StateVar
 
+import Debug.Trace
 --------------------------------------------------------------------------------
 -- * Uniform Locations
 --------------------------------------------------------------------------------
@@ -130,10 +131,10 @@ uniformMat4 l = uniformMat4s l . Id
 programUniform :: MonadIO m => (Program -> UniformLocation -> StateVar a) -> Program -> String -> m (StateVar a)
 programUniform f p s = f p `liftM` uniformLocation p s
 
-programUniformv' :: forall (n :: Nat) f a. (Dim n, Storable (f a)) => (GLuint -> GLint -> Ptr a -> IO ()) -> (GLuint -> GLint -> GLsizei -> Ptr a -> IO ()) -> Program -> UniformLocation -> StateVar (V n (f a))
+programUniformv' :: forall (n :: Nat) f a. (Dim n, Storable (f a), Show (f a)) => (GLuint -> GLint -> Ptr a -> IO ()) -> (GLuint -> GLint -> GLsizei -> Ptr a -> IO ()) -> Program -> UniformLocation -> StateVar (V n (f a))
 programUniformv' getv setv p l = StateVar g s where
   g = alloca $ (>>) <$> getv (coerce p) (coerce l) . castPtr <*> peek
-  s v = alloca $ (>>) <$> setv (coerce p) (coerce l) (fromIntegral $ dim v) . castPtr <*> (`poke` v)
+  s v = alloca $ \ptr -> poke ptr v >> setv (coerce p) (coerce l) (fromIntegral $ dim v) (castPtr ptr)
 
 programUniform1f :: Program -> UniformLocation -> StateVar Float
 programUniform1f p l = StateVar g s where
