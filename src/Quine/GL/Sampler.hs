@@ -96,7 +96,7 @@ samplerParameterf sampler p = StateVar g s where
 samplerParameterfv' :: Storable (f Float) => Sampler -> SamplerParameter -> StateVar (f Float)
 samplerParameterfv' sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameterfv (coerce sampler) p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glSamplerParameterfv (coerce sampler) p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glSamplerParameterfv (coerce sampler) p . castPtr 
 
 samplerParameterfv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Float)
 samplerParameterfv = samplerParameterfv'
@@ -118,7 +118,7 @@ samplerParameteri sampler p = StateVar g s where
 samplerParameteriv' :: Storable (f Int32) => Sampler -> SamplerParameter -> StateVar (f Int32)
 samplerParameteriv' sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameteriv (coerce sampler) p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glSamplerParameteriv (coerce sampler) p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glSamplerParameteriv (coerce sampler) p . castPtr
 
 samplerParameteriv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Int32)
 samplerParameteriv = samplerParameteriv'
@@ -135,10 +135,10 @@ samplerParameter4i = samplerParameteriv'
 samplerParameterIiv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Int32)
 samplerParameterIiv sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameterIiv (coerce sampler) p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glSamplerParameterIiv (coerce sampler) p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glSamplerParameterIiv (coerce sampler) p . castPtr
 
 samplerParameterIuiv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Word32)
 samplerParameterIuiv sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameterIuiv (coerce sampler) p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glSamplerParameterIuiv (coerce sampler) p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glSamplerParameterIuiv (coerce sampler) p . castPtr
 

@@ -117,7 +117,7 @@ texParameteri t p = StateVar g s where
 texParameterfv' :: Storable (f Float) => TextureTarget -> TextureParameter -> StateVar (f Float)
 texParameterfv' t p = StateVar g s where
   g = alloca $ (>>) <$> glGetTexParameterfv t p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glTexParameterfv t p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glTexParameterfv t p . castPtr
 
 texParameterfv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Float)
 texParameterfv = texParameterfv'
@@ -134,7 +134,7 @@ texParameter4f = texParameterfv'
 texParameteriv' :: Storable (f Int32) => TextureTarget -> TextureParameter -> StateVar (f Int32)
 texParameteriv' t p = StateVar g s where
   g = alloca $ (>>) <$> glGetTexParameteriv t p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glTexParameteriv t p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glTexParameteriv t p . castPtr
 
 texParameteriv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Int32)
 texParameteriv = texParameteriv'
@@ -151,12 +151,12 @@ texParameter4i = texParameteriv'
 texParameterIiv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Int32)
 texParameterIiv t p = StateVar g s where
   g = alloca $ (>>) <$> glGetTexParameterIiv t p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glTexParameterIiv t p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glTexParameterIiv t p . castPtr
 
 texParameterIuiv :: Dim n => TextureTarget -> TextureParameter -> StateVar (V n Word32)
 texParameterIuiv t p = StateVar g s where
   g = alloca $ (>>) <$> glGetTexParameterIuiv t p . castPtr <*> peek
-  s v = alloca $ (>>) <$> glTexParameterIuiv t p . castPtr <*> (`poke` v)
+  s v = alloca $ (>>) <$> (`poke` v) <*> glTexParameterIuiv t p . castPtr
 
 -- * Texture Unit
 
