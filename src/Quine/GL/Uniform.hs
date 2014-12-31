@@ -24,6 +24,7 @@ module Quine.GL.Uniform
   , uniformMat4
   -- * Program Uniforms
   -- $programUniform
+  -- ** Scalar & Vectors
   , programUniform
   , programUniform1f
   , programUniform2f
@@ -57,6 +58,25 @@ module Quine.GL.Uniform
   , programUniform2uiv
   , programUniform3uiv
   , programUniform4uiv
+  -- ** Matrices
+  , programUniformMatrix2f
+  , programUniformMatrix3f
+  , programUniformMatrix4f
+  , programUniformMatrix2x4f
+  , programUniformMatrix4x2f
+  , programUniformMatrix3x4f
+  , programUniformMatrix4x3f
+  , programUniformMatrix2x3f
+  , programUniformMatrix3x2f
+  , programUniformMatrix2fv
+  , programUniformMatrix3fv
+  , programUniformMatrix4fv
+  , programUniformMatrix2x3fv
+  , programUniformMatrix3x2fv
+  , programUniformMatrix2x4fv
+  , programUniformMatrix4x2fv
+  , programUniformMatrix3x4fv
+  , programUniformMatrix4x3fv
   -- * Uniform Types
   , UniformType
   , showUniformType
@@ -71,6 +91,8 @@ import GHC.TypeLits
 import Data.Coerce
 import Data.Distributive
 import Data.Foldable
+import Data.Maybe
+import qualified Data.Vector as V
 import Data.Int
 import Data.Word
 import Foreign.C.String
@@ -262,6 +284,72 @@ programUniform3uiv = programUniformv' glGetUniformuiv glProgramUniform3uiv
 
 programUniform4uiv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n (V4 Word32))
 programUniform4uiv = programUniformv' glGetUniformuiv glProgramUniform4uiv
+
+programUniformMatrix 
+  :: forall (n :: Nat) g f a y. (Dim n, Distributive g, Functor f, Storable (g (f a))) 
+  => (GLuint -> GLint -> Ptr a -> IO ())
+  -> (GLuint -> GLint -> GLsizei -> GLboolean -> Ptr y -> IO ())
+  -> Program -> UniformLocation -> StateVar (V n (g (f a)))
+programUniformMatrix getv setv p l = StateVar g s where
+  g = alloca $ (>>) <$> getv (coerce p) (coerce l) . castPtr <*> peek
+  s ms = alloca $ (>>) <$> (`poke` ms) <*> setv (coerce p) (coerce l) (fromIntegral $ dim ms) GL_FALSE . castPtr
+
+programUniformMatrixMf :: (Program -> UniformLocation -> StateVar (V 1 mm)) -> Program -> UniformLocation -> StateVar mm
+programUniformMatrixMf var p l = mapStateVar (fromJust.fromVector.V.singleton) (V.head.toVector) $ var p l
+
+programUniformMatrix2f :: Program -> UniformLocation -> StateVar Mat2
+programUniformMatrix2f = programUniformMatrixMf programUniformMatrix2fv
+
+programUniformMatrix3f :: Program -> UniformLocation -> StateVar Mat3
+programUniformMatrix3f = programUniformMatrixMf programUniformMatrix3fv
+
+programUniformMatrix4f :: Program -> UniformLocation -> StateVar Mat4
+programUniformMatrix4f = programUniformMatrixMf programUniformMatrix4fv
+
+programUniformMatrix2x3f :: Program -> UniformLocation -> StateVar Mat2x3
+programUniformMatrix2x3f = programUniformMatrixMf programUniformMatrix2x3fv
+
+programUniformMatrix3x2f :: Program -> UniformLocation -> StateVar Mat3x2
+programUniformMatrix3x2f = programUniformMatrixMf programUniformMatrix3x2fv
+
+programUniformMatrix2x4f :: Program -> UniformLocation -> StateVar Mat2x4
+programUniformMatrix2x4f = programUniformMatrixMf programUniformMatrix2x4fv
+
+programUniformMatrix4x2f :: Program -> UniformLocation -> StateVar Mat4x2
+programUniformMatrix4x2f = programUniformMatrixMf programUniformMatrix4x2fv
+
+programUniformMatrix3x4f :: Program -> UniformLocation -> StateVar Mat3x4
+programUniformMatrix3x4f = programUniformMatrixMf programUniformMatrix3x4fv
+
+programUniformMatrix4x3f :: Program -> UniformLocation -> StateVar Mat4x3
+programUniformMatrix4x3f = programUniformMatrixMf programUniformMatrix4x3fv
+
+programUniformMatrix2fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat2)
+programUniformMatrix2fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix2fv p l
+
+programUniformMatrix3fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat3)
+programUniformMatrix3fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix3fv p l
+
+programUniformMatrix4fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat4)
+programUniformMatrix4fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix4fv p l
+
+programUniformMatrix2x3fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat2x3)
+programUniformMatrix2x3fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix2x3fv p l
+
+programUniformMatrix3x2fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat3x2)
+programUniformMatrix3x2fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix3x2fv p l
+
+programUniformMatrix2x4fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat2x4)
+programUniformMatrix2x4fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix2x4fv p l
+
+programUniformMatrix4x2fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat4x2)
+programUniformMatrix4x2fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix4x2fv p l
+
+programUniformMatrix3x4fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat3x4)
+programUniformMatrix3x4fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix3x4fv p l
+
+programUniformMatrix4x3fv :: forall (n :: Nat). Dim n => Program -> UniformLocation -> StateVar (V n Mat4x3)
+programUniformMatrix4x3fv p l = mapStateVar (fmap transpose) (fmap transpose) $ programUniformMatrix glGetUniformfv glProgramUniformMatrix4x3fv p l
 
 --------------------------------------------------------------------------------
 -- * Uniform Type
