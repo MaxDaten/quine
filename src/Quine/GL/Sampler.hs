@@ -37,6 +37,7 @@ module Quine.GL.Sampler
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Lens (view)
 import Data.Coerce
 import Data.Data
 import Data.Int
@@ -88,15 +89,13 @@ boundSampler u = StateVar g s where
 -- Using 'Sampler's is the prefered way to store 'TextureParameter' settings. When a sampler is bound to
 -- a 'TextureUnit' _all_ settings tied to the 'Texture' are ignored.
 
-samplerParameterf :: Sampler -> SamplerParameter -> StateVar Float
-samplerParameterf sampler p = StateVar g s where
-  g = alloca $ (>>) <$> glGetSamplerParameterfv (coerce sampler) p . castPtr <*> peek
-  s = glSamplerParameterf (coerce sampler) p
-
 samplerParameterfv' :: Storable (f Float) => Sampler -> SamplerParameter -> StateVar (f Float)
 samplerParameterfv' sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameterfv (coerce sampler) p . castPtr <*> peek
   s v = alloca $ (>>) <$> (`poke` v) <*> glSamplerParameterfv (coerce sampler) p . castPtr 
+
+samplerParameterf :: Sampler -> SamplerParameter -> StateVar Float
+samplerParameterf s p = mapStateVar V1 (view _x) $ samplerParameterfv' s p
 
 samplerParameterfv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Float)
 samplerParameterfv = samplerParameterfv'
@@ -110,11 +109,6 @@ samplerParameter3f = samplerParameterfv'
 samplerParameter4f :: Sampler -> SamplerParameter -> StateVar (V4 Float)
 samplerParameter4f = samplerParameterfv'
 
-samplerParameteri :: Sampler -> SamplerParameter -> StateVar Int32
-samplerParameteri sampler p = StateVar g s where
-  g = alloca $ (>>) <$> glGetSamplerParameteriv (coerce sampler) p . castPtr <*> peek
-  s = glSamplerParameteri (coerce sampler) p
-
 samplerParameteriv' :: Storable (f Int32) => Sampler -> SamplerParameter -> StateVar (f Int32)
 samplerParameteriv' sampler p = StateVar g s where
   g = alloca $ (>>) <$> glGetSamplerParameteriv (coerce sampler) p . castPtr <*> peek
@@ -122,6 +116,9 @@ samplerParameteriv' sampler p = StateVar g s where
 
 samplerParameteriv :: Dim n => Sampler -> SamplerParameter -> StateVar (V n Int32)
 samplerParameteriv = samplerParameteriv'
+
+samplerParameteri :: Sampler -> SamplerParameter -> StateVar Int32
+samplerParameteri s p = mapStateVar V1 (view _x) $ samplerParameteriv' s p
 
 samplerParameter2i :: Sampler -> SamplerParameter -> StateVar (V2 Int32)
 samplerParameter2i = samplerParameteriv'
