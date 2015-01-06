@@ -220,8 +220,8 @@ core = do
   prog <- link [transformVert,colorFrag]
   currentProgram $= prog
   
-  Just aPosition <- attributeLocation prog "aPosition"
-  Just aColor    <- attributeLocation prog "aColor"
+  Just aPosition <- getAttributeLocation prog "aPosition"
+  Just aColor    <- getAttributeLocation prog "aColor"
 
   emptyVAO <- gen
   throwErrors

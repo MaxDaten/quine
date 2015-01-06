@@ -28,7 +28,8 @@ module Quine.GL.Attribute
   -- * Attributes
   , Attribute(..)
   , AttributeLocation
-  , attributeLocation
+  , getAttributeLocation
+  , boundAttributeLocation
   -- * Attribute Layout Definition
   , vertexAttribute
   , setVertexAttribute
@@ -41,8 +42,10 @@ module Quine.GL.Attribute
   ) where
 
 import Control.Monad.IO.Class
+import Data.Coerce
 import Data.Data
 import Data.Functor
+import Data.Maybe
 import Data.Functor.Contravariant
 import Data.Int
 import Data.Word
@@ -66,8 +69,8 @@ import Linear
 type AttributeLocation = GLuint
 
 -- | Returns 'Nothing' if the attribute is unbound within the program.
-attributeLocation :: MonadIO m => Program -> String -> m (Maybe AttributeLocation)
-attributeLocation (Program p) s = liftIO $ check <$> withCString s (glGetAttribLocation p . castPtr) where
+getAttributeLocation :: MonadIO m => Program -> String -> m (Maybe AttributeLocation)
+getAttributeLocation (Program p) s = liftIO $ check <$> withCString s (glGetAttribLocation p . castPtr) where
   check n
     | n < 0     = Nothing
     | otherwise = Just $ fromIntegral n
@@ -102,6 +105,12 @@ class HasLayoutAnnotation a where
   layoutAnnotation :: Functor p => p (a UnAnnotated) -> a LayoutAnnotation
 
 type AttributeAccessor a b = a LayoutAnnotation -> LayoutAnnotation b
+
+-- | Explicit attribute asignment
+boundAttributeLocation :: Program -> String -> StateVar AttributeLocation
+boundAttributeLocation prog name = StateVar g s where
+  g = fromJust <$> getAttributeLocation prog name
+  s l = withCString name (glBindAttribLocation (coerce prog) l) 
 
 -- | Associates the vertex attribute to the data layout in the vertex buffer. 
 -- The association is stored in the vertex array object 'OpenGL' wise, so a VAO must be bound
