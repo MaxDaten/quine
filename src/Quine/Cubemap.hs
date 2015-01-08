@@ -25,6 +25,7 @@ module Quine.Cubemap
   ) where
 
 import Control.Monad
+import Control.Applicative
 import Codec.Picture
 import Data.Data
 import Data.Foldable
@@ -51,6 +52,10 @@ data Cubemap a = Cubemap
   } deriving ( Show,Functor,Foldable,Traversable,Data,Typeable,Generic )
 
 type GLFaceTargets = Cubemap GLenum
+
+instance Applicative Cubemap where
+  pure v = Cubemap v v v v v v
+  Cubemap a b c d e f <*> Cubemap a' b' c' d' e' f' = Cubemap (a a') (b b') (c c') (d d') (e e') (f f')
 
 instance (ImageFormat a, Image2D (Image a)) => Image2D (Cubemap (Image a)) where
   upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets)
