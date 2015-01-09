@@ -57,6 +57,10 @@ flag test-shaders
   default: True
   manual: True
 
+flag test-textures
+  default: True
+  manual: True
+
 flag toy
   default: True
   manual: True
@@ -252,6 +256,28 @@ test-suite test-buffers
       quine,
       linear,
       bytestring,
+      vector
+
+test-suite test-textures
+  main-is: textures.hs
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  if !flag(test-textures)
+    buildable: False
+  else
+    ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+    build-depends:
+      base,
+      containers,
+      data-default,
+      gl,
+      sdl2,
+      hspec,
+      quine,
+      linear,
+      bytestring,
+      JuicyPixels,
       vector
 
 test-suite test-framebuffers
