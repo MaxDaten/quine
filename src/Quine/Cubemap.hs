@@ -6,6 +6,7 @@
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE NamedFieldPuns       #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE FlexibleContexts     #-}
 --------------------------------------------------------------------
 -- |
@@ -24,14 +25,20 @@ module Quine.Cubemap
   , glFaceTargets
   ) where
 
-import Control.Monad
+import Codec.Picture
+import Codec.Picture.Types
 import Control.Applicative
+import Control.Monad.IO.Class
+import Control.Monad hiding (forM_)
 import Data.Data
 import Data.Foldable
 import Data.Traversable
+import qualified Data.Vector.Storable as V
+import Foreign.Ptr (castPtr)
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
+import Quine.GL.Texture
 import Quine.Image
 
 -- | Faces in OpenGL order
@@ -56,11 +63,10 @@ instance Applicative Cubemap where
   pure v = Cubemap v v v v v v
   Cubemap a b c d e f <*> Cubemap a' b' c' d' e' f' = Cubemap (a a') (b b') (c c') (d d') (e e') (f f')
 
+
 instance (Image2D i) => Image2D (Cubemap i) where
   upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets)
-  store cube@Cubemap{faceRight} t = do
-    store faceRight GL_TEXTURE_CUBE_MAP
-    upload cube t 0
+  store cube@Cubemap{faceRight} t = store faceRight GL_TEXTURE_CUBE_MAP
 
 glFaceTargets :: GLFaceTargets
 glFaceTargets = Cubemap 
