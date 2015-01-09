@@ -152,7 +152,10 @@ downloadM x y (MutableImage w h mv) = liftIO $ do
 -- * Upload
 
 class Image2D i where
+  -- | Uploads the image into the currently bound render hardware texture 
   upload :: MonadIO m => i -> TextureTarget -> MipmapLevel -> m ()
+  -- | Allocates only the memory on the render hardware for the Image2D instance
+  -- no image data is pushed to the hardware
   store :: MonadIO m => i -> TextureTarget -> m ()
 
 instance ImageFormat a => Image2D (Image a) where
@@ -166,10 +169,9 @@ instance ImageFormat a => Image2D (Image a) where
     glPixelStorei GL_UNPACK_SKIP_IMAGES  0
     glPixelStorei GL_UNPACK_ALIGNMENT    1 -- normally 4!
     V.unsafeWith v $ glTexSubImage2D t l 0 0 (fromIntegral w) (fromIntegral h) (pixelFormat i) (pixelType i) . castPtr
-    swizzle i t
   store i@(Image w h _) t = liftIO $ do
     glTexStorage2D t 1 (internalFormat i) (fromIntegral w) (fromIntegral h)
-    upload i t 0
+    swizzle i t
 
 instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
   upload i@(MutableImage w h v) t l = liftIO $ do
@@ -182,10 +184,9 @@ instance (ImageFormat a, s ~ RealWorld) => Image2D (MutableImage s a) where
     glPixelStorei GL_UNPACK_SKIP_IMAGES  0
     glPixelStorei GL_UNPACK_ALIGNMENT    1 -- normally 4!
     MV.unsafeWith v $ glTexSubImage2D t l 0 0 (fromIntegral w) (fromIntegral h) (pixelFormat i) (pixelType i) . castPtr
-    swizzle i t
   store i@(MutableImage w h _) t = liftIO $ do
     glTexStorage2D t 1 (internalFormat i) (fromIntegral w) (fromIntegral h)
-    upload i t 0
+    swizzle i t
 
 instance Image2D DynamicImage where
   upload (ImageY8 i)     = upload i
