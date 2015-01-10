@@ -23,6 +23,7 @@ module Quine.Cubemap
     Cubemap(..)
   , GLFaceTargets
   , glFaceTargets
+  , sameFaces
   ) where
 
 import Codec.Picture
@@ -63,10 +64,12 @@ instance Applicative Cubemap where
   pure v = Cubemap v v v v v v
   Cubemap a b c d e f <*> Cubemap a' b' c' d' e' f' = Cubemap (a a') (b b') (c c') (d d') (e e') (f f')
 
-
 instance (Image2D i) => Image2D (Cubemap i) where
   upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets)
   store cube@Cubemap{faceRight} t = store faceRight GL_TEXTURE_CUBE_MAP
+
+sameFaces :: a -> Cubemap a
+sameFaces = pure
 
 glFaceTargets :: GLFaceTargets
 glFaceTargets = Cubemap 
