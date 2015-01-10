@@ -26,20 +26,14 @@ module Quine.Cubemap
   , sameFaces
   ) where
 
-import Codec.Picture
-import Codec.Picture.Types
 import Control.Applicative
-import Control.Monad.IO.Class
 import Control.Monad hiding (forM_)
 import Data.Data
 import Data.Foldable
 import Data.Traversable
-import qualified Data.Vector.Storable as V
-import Foreign.Ptr (castPtr)
 import GHC.Generics
 import Graphics.GL.Core45
 import Graphics.GL.Types
-import Quine.GL.Texture
 import Quine.Image
 
 -- | Faces in OpenGL order
@@ -66,7 +60,7 @@ instance Applicative Cubemap where
 
 instance (Image2D i) => Image2D (Cubemap i) where
   upload cube _ l = zipWithM_ (\img t -> upload img t l) (toList cube) (toList glFaceTargets)
-  store cube@Cubemap{faceRight} t = store faceRight GL_TEXTURE_CUBE_MAP
+  store Cubemap{faceRight} _ = store faceRight GL_TEXTURE_CUBE_MAP
 
 sameFaces :: a -> Cubemap a
 sameFaces = pure
