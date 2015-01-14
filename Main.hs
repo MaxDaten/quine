@@ -61,7 +61,7 @@ import Quine.Monitor
 import Quine.Options
 import Quine.SDL as SDL
 import Quine.Simulation
-import Quine.StateVar
+import Quine.StateVar hiding (set)
 import Quine.System
 
 -- | I need to switch to UBOs!

@@ -21,6 +21,7 @@ module Quine.StateVar
   , StateVar(StateVar)
   , mapStateVar
   , HasUpdate(($~), ($~!))
+  , set
   ) where
 
 import Control.Concurrent.STM
@@ -121,3 +122,7 @@ instance (Storable a, MonadIO m) => HasUpdate (Ptr a) a m
 instance MonadIO m => HasUpdate (IORef a) a m where
   r $~ f  = liftIO $ atomicModifyIORef r $ \a -> (f a,())
   r $~! f = liftIO $ atomicModifyIORef' r $ \a -> (f a,())
+
+-- | Non-infix version of '($=)'
+set :: HasSetter t a m => t -> a -> m ()
+set = ($=)
