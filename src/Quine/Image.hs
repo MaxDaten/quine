@@ -19,6 +19,7 @@ module Quine.Image
   , download, downloadM
   -- * Image formats
   , ImageFormat(..)
+  , dynamicImageFormat
   ) where
 
 import Codec.Picture
@@ -216,3 +217,20 @@ instance Image2D DynamicImage where
   store (ImageYCbCr8 i) = store (convertImage i :: Image PixelRGB8)
   store (ImageCMYK8 i)  = store (convertImage i :: Image PixelRGB8)
   store (ImageCMYK16 i) = store (convertImage i :: Image PixelRGB16)
+
+dynamicImageFormat :: DynamicImage -> InternalFormat
+dynamicImageFormat dyn = case dyn of
+  (ImageY8 i)      -> internalFormat i
+  (ImageY16 i)     -> internalFormat i
+  (ImageYF i)      -> internalFormat i
+  (ImageYA8 i)     -> internalFormat i
+  (ImageYA16 i)    -> internalFormat i
+  (ImageRGB8 i)    -> internalFormat i
+  (ImageRGB16 i)   -> internalFormat i
+  (ImageRGBF i)    -> internalFormat i
+  (ImageRGBA8 i)   -> internalFormat i
+  (ImageRGBA16 i)  -> internalFormat i
+  -- the following formats are converted by the Image2D DynamicImage instance (error prone when conversion is changed)
+  (ImageYCbCr8 _)  -> internalFormat (Proxy :: Proxy PixelRGB8)
+  (ImageCMYK8 _)   -> internalFormat (Proxy :: Proxy PixelRGB8)
+  (ImageCMYK16 _)  -> internalFormat (Proxy :: Proxy PixelRGB16)

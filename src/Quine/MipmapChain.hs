@@ -30,10 +30,11 @@ import Prelude hiding (zipWith,tail,head,length,sequence_)
 import Codec.Picture
 import Codec.Picture.Types (dynamicMap)
 import Data.Foldable (sequence_)
-import Data.Proxy
 import Data.List.NonEmpty
 import Graphics.GL.Ext.ARB.TextureStorage
+import Graphics.GL.Core45
 import Quine.Image
+import Quine.Cubemap
 
 -- | The first element in the 'MipmapChain' is the base element
 -- (e.g. 'Texture' or 'FilePath'). Every 'MipmapChain' has a base
@@ -76,20 +77,10 @@ instance (ImageFormat a, Image2D (Image a)) => Image2D (MipmapChain (Image a)) w
 instance Image2D (MipmapChain DynamicImage) where
   upload chain t _l = sequence_ $ zipWith (\img l -> upload img t l) chain (mkMipmapChain 0 [1..])
   store chain t = 
-    let base = (mipMapBase chain) in glTexStorage2D t (fromIntegral $ maxMipMapLevel chain + 1) fmt (fromIntegral $ dynamicMap imageWidth base) (fromIntegral $ dynamicMap imageHeight base)  
-    where 
-    fmt = case (mipMapBase chain) of
-      (ImageY8 i)      -> internalFormat i
-      (ImageY16 i)     -> internalFormat i
-      (ImageYF i)      -> internalFormat i
-      (ImageYA8 i)     -> internalFormat i
-      (ImageYA16 i)    -> internalFormat i
-      (ImageRGB8 i)    -> internalFormat i
-      (ImageRGB16 i)   -> internalFormat i
-      (ImageRGBF i)    -> internalFormat i
-      (ImageRGBA8 i)   -> internalFormat i
-      (ImageRGBA16 i)  -> internalFormat i
-      -- the following formats are converted by the Image2D DynamicImage instance
-      (ImageYCbCr8 _)  -> internalFormat (Proxy :: Proxy PixelRGB8)
-      (ImageCMYK8 _)   -> internalFormat (Proxy :: Proxy PixelRGB8)
-      (ImageCMYK16 _)  -> internalFormat (Proxy :: Proxy PixelRGB16)
+    glTexStorage2D t (fromIntegral $ maxMipMapLevel chain + 1) (dynamicImageFormat base) (fromIntegral $ dynamicMap imageWidth base) (fromIntegral $ dynamicMap imageHeight base)  
+   where
+    base = mipMapBase chain
+  
+instance Image2D (MipmapChain (Cubemap DynamicImage)) where
+  upload chain t _l = sequence_ $ zipWith (\cube l -> upload cube t l) chain (mkMipmapChain 0 [1..])
+  store chain _t = store (faceRight $ mipMapBase chain) GL_TEXTURE_CUBE_MAP
