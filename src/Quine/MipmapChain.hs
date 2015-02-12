@@ -83,4 +83,4 @@ instance Image2D (MipmapChain DynamicImage) where
   
 instance Image2D (MipmapChain (Cubemap DynamicImage)) where
   upload chain t _l = sequence_ $ zipWith (\cube l -> upload cube t l) chain (mkMipmapChain 0 [1..])
-  store chain _t = store (faceRight $ mipMapBase chain) GL_TEXTURE_CUBE_MAP
+  store chain _t = store (fmap faceRight chain) GL_TEXTURE_CUBE_MAP
