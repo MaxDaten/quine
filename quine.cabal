@@ -130,6 +130,7 @@ library
     directory,
     distributive,
     ekg,
+    ekg-core >= 0.1.0.3,
     file-embed,
     filepath,
     fingertree,
