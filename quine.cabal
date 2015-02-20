@@ -90,6 +90,7 @@ library
     Quine.GL.Draw
     Quine.GL.Error
     Quine.GL.Framebuffer
+    Quine.GL.InternalFormat
     Quine.GL.Object
     Quine.GL.Pixel
     Quine.GL.Program
