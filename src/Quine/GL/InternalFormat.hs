@@ -16,6 +16,7 @@
 module Quine.GL.InternalFormat
   ( -- * Plain Getting 
     getInternalFormatv
+  , getInternalFormats
   , getInternalFormat1
   , checkInternalFormat
   -- * Convenient Getter
@@ -23,13 +24,12 @@ module Quine.GL.InternalFormat
   , getFilterSupport
   ) where
 
-import Control.Applicative
 import Control.Monad (liftM)
 import Control.Monad.IO.Class
 import Data.Proxy
-import Foreign.Marshal.Alloc
+import Data.Maybe (fromJust)
+import Foreign.Marshal.Array
 import Foreign.Ptr
-import Foreign.Storable
 import GHC.TypeLits
 import Graphics.GL.Core43
 import Graphics.GL.Types
@@ -42,7 +42,13 @@ import Quine.GL.Pixel (InternalFormat)
 
 getInternalFormatv :: forall m (n :: Nat). (MonadIO m, Dim n) => TextureTarget -> InternalFormat -> GLenum -> m (V n Int)
 getInternalFormatv target internalformat pname =
- liftIO $ alloca $ (>>) <$> glGetInternalformativ target internalformat pname (fromIntegral $ reflectDim (Proxy::Proxy n)) . castPtr <*> peek
+	liftM (fromJust . fromVector . V.fromList) $ getInternalFormats target internalformat pname (reflectDim (Proxy::Proxy n))
+
+getInternalFormats :: MonadIO m => TextureTarget -> InternalFormat -> GLenum -> Int -> m [Int]
+getInternalFormats target internalformat pname num =
+ liftIO $ allocaArray num $ \p -> do
+ 	glGetInternalformativ target internalformat pname (fromIntegral num) (castPtr p)
+ 	peekArray num p
 
 getInternalFormat1 :: MonadIO m => TextureTarget -> InternalFormat -> GLenum -> m Int
 getInternalFormat1 target internalformat pname = liftM (V.head . toVector) get
