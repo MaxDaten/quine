@@ -15,6 +15,8 @@ module Quine.GL.Pixel
   , compSize1D
   , compSize2D
   , compSize3D
+  , components
+  , typeSize
   ) where
 
 import Data.Bits
@@ -38,6 +40,7 @@ components GL_GREEN = 1
 components GL_LUMINANCE = 1
 components GL_LUMINANCE_ALPHA = 2
 components GL_RED = 1
+components GL_RED_INTEGER = 1    -- all single explict (unsigned) integer formats
 components GL_RED_EXT = 1
 components GL_RGB = 3
 components GL_RGBA = 4
