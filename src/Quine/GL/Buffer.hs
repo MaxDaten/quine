@@ -25,6 +25,7 @@ module Quine.GL.Buffer
   , BufferData(..)
   , bufferData
   , bufferDataDirect
+  , sizedEmptyBuffer
   -- * Buffer Targets
   , BufferTarget(..)
   , pattern ArrayBuffer
@@ -171,6 +172,14 @@ bufferData (BufferTarget t _) = StateVar g s where
           glGetBufferSubData t 0 (fromIntegral size) (castPtr rawPtr)
           (usage,) <$> fromRawData (fromIntegral size) rawPtr
   s (u,v) = withRawData v $ \ptr -> glBufferData t (fromIntegral $ sizeOfData v) ptr (coerce u)
+
+-- | Preallocate a empty buffer with given size in bytes
+sizedEmptyBuffer :: MonadIO m => BufferTarget -> BufferUsage -> Int -> m (Buffer a)
+sizedEmptyBuffer t@(BufferTarget glt _) usage bytes = do
+  buffer <- gen
+  boundBufferAt t $= buffer
+  glBufferData glt (fromIntegral $ bytes) nullPtr (coerce usage)
+  return buffer
 
 -- * Buffer Types
 
