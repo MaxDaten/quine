@@ -35,7 +35,7 @@ import Quine.GL.Block
 import Quine.GL.Types
 
 data Box = Box { _lo, _hi :: Vec3 }
-  deriving (Data, Typeable, Generic)
+  deriving (Show,Data,Typeable,Generic)
 
 -- | encoded to match @shaders/geometry/box.h@
 instance Block Box
