@@ -179,6 +179,7 @@ sizedEmptyBuffer t@(BufferTarget glt _) usage bytes = do
   buffer <- gen
   boundBufferAt t $= buffer
   glBufferData glt (fromIntegral $ bytes) nullPtr (coerce usage)
+  boundBufferAt t $= def
   return buffer
 
 -- * Buffer Types
