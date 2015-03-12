@@ -16,10 +16,8 @@ synopsis:      Quine
 description:   Quine
 
 extra-source-files:
-  .ghci
   .gitignore
   .vim.custom
-  HLint.hs
   CHANGELOG.markdown
   README.markdown
 
