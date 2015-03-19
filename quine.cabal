@@ -16,7 +16,6 @@ synopsis:      Quine
 description:   Quine
 
 extra-source-files:
-  .gitignore
   .vim.custom
   CHANGELOG.markdown
   README.markdown
